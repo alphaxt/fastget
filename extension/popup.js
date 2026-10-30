@@ -17,13 +17,23 @@ chrome.storage.local.get(DEFAULTS).then((s) => {
   minSizeEl.value = Math.round((s.minSizeBytes || 0) / (1024 * 1024));
 });
 
-// Firefox does not grant host access automatically; without it we cannot read a
-// site's cookies and some downloads fail with 403. Offer a one-click grant.
-const ALL_SITES = { origins: ["<all_urls>"] };
+// Show the setup prompt only when the app is not detected.
+const setupBox = document.getElementById("setupBox");
+chrome.runtime.sendMessage({ cmd: "checkApp" }, (r) => {
+  setupBox.hidden = !!(r && r.ok);
+});
+document.getElementById("setup").addEventListener("click", () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL("setup.html") });
+  window.close();
+});
+
+// Optional: cookies + host access, only for logged-in / members-only downloads.
+const COOKIES = { permissions: ["cookies"], origins: ["<all_urls>"] };
 const permBox = document.getElementById("permBox");
-chrome.permissions.contains(ALL_SITES).then((ok) => { permBox.hidden = ok; });
+chrome.permissions.contains(COOKIES).then((ok) => { permBox.hidden = ok; });
 document.getElementById("grant").addEventListener("click", async () => {
-  const ok = await chrome.permissions.request(ALL_SITES);
+  let ok = false;
+  try { ok = await chrome.permissions.request(COOKIES); } catch {}
   permBox.hidden = ok;
 });
 

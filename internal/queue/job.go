@@ -8,7 +8,7 @@ package queue
 import (
 	"time"
 
-	"github.com/yourname/fastget/internal/engine"
+	"github.com/alphaxt/fastget/internal/engine"
 )
 
 // Status is the lifecycle state of a job.

@@ -29,8 +29,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/yourname/fastget/internal/fsutil"
-	"github.com/yourname/fastget/internal/picker"
+	"github.com/alphaxt/fastget/internal/fsutil"
+	"github.com/alphaxt/fastget/internal/picker"
 )
 
 // uiAddr is where the fastget desktop app serves its API (its default address).

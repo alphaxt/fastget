@@ -61,10 +61,14 @@
 
     <button id="openList" class="big">Open download list</button>
 
+    <div id="setupBox" class="perm" hidden>
+      The fastget app is required and isn't detected.
+      <button id="setup" class="big warn">Set up fastget</button>
+    </div>
+
     <div id="permBox" class="perm" hidden>
-      fastget needs access to websites to send their cookies, otherwise some
-      downloads fail with "403".
-      <button id="grant" class="big warn">Allow access to websites</button>
+      For downloads that need a login, fastget can reuse that site's cookies.
+      <button id="grant" class="big warn">Allow logged-in downloads</button>
     </div>
 
     <div class="row">

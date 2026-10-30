@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yourname/fastget/internal/engine"
+	"github.com/alphaxt/fastget/internal/engine"
 )
 
 // Manager owns the job list and schedules downloads so that at most

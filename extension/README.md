@@ -1,9 +1,11 @@
-# fastget browser integration
+# fastget browser extension
 
-Catches downloads in Chrome/Edge and hands them to the local fastget engine for
-fast multi-connection downloading. This is the "the download manager pops up and
-grabs the download" behaviour, built entirely on the browser's own supported
-extension + native-messaging APIs.
+Catches downloads in Chrome, Edge and Firefox and hands them to the local
+fastget app, which does the fast multi-connection downloading. This is the
+"the download manager pops up and grabs the download" behaviour, built on the
+browser's own supported extension + native-messaging APIs.
+
+Project: https://github.com/alphaxt/fastget
 
 ## How it fits together
 
@@ -11,113 +13,96 @@ extension + native-messaging APIs.
 Browser download starts
         │
         ▼
- WebExtension (background.js)      cancels the browser download,
-        │                          grabs the URL + filename
+ WebExtension (background.js)     cancels the browser download, shows the
+        │                         "download this file?" popup, gathers URL/
+        │                         name/size/referrer (+ cookies if allowed)
         ▼  native messaging (4-byte length + JSON frames)
- fastget-host.exe                  reads the request from stdin
+ fastget-host.exe                 hands it to the running app (starts it if needed)
         │
         ▼
- internal/engine (Go)             multi-connection download + resume
-        │
+ fastget-ui.exe (engine + queue)  multi-connection download, shown in the
+        │                         download list + live progress window
         ▼
- file saved to your Downloads folder
+ file saved to the folder you chose
 ```
 
-The browser will only launch `fastget-host.exe` because:
-1. its manifest is registered in the Windows registry, and
-2. that manifest lists your specific extension ID in `allowed_origins`.
+The browser only launches `fastget-host.exe` because its manifest is registered
+on the machine and lists this extension's ID. Arbitrary web pages cannot reach it.
 
-Arbitrary web pages cannot reach the host.
+## For end users
 
-## Install (Windows, Chrome or Edge)
+Install the app from the
+[latest release](https://github.com/alphaxt/fastget/releases/latest). The
+installer registers the native host for all installed browsers automatically.
+Then add the extension from the browser's store. On first use, the extension's
+setup page confirms the app is detected; for logged-in/members-only downloads you
+can optionally grant cookie access from that page.
 
-### 1. Build the binaries
+The extension is Windows-only in practice, because the app it drives is
+Windows-only.
+
+## For developers (loading the unpacked extension)
+
+### 1. Build
 
 ```powershell
-cd e:\reverse\downloader
-go build -o fastget.exe ./cmd/fastget
-go build -o fastget-host.exe ./cmd/fastget-host
+.\build\build.ps1 -Go "C:\Program Files\Go\bin\go.exe"
 ```
 
-### 2. Load the extension (to get its ID)
+This produces the binaries in `build\dist` and a browser-ready copy of the
+extension in `build\dist\extension` (web files only — the `host\` scripts below
+are not part of the shipped extension).
 
-1. Open `chrome://extensions` (or `edge://extensions`).
-2. Turn on **Developer mode** (top-right).
-3. Click **Load unpacked** and select the `e:\reverse\downloader\extension` folder.
-4. Copy the **extension ID** shown on the extension's card.
-
-> Note: icons are referenced in `manifest.json` but not shipped here. Either add
-> `icons/icon48.png` and `icons/icon128.png`, or remove the `icons` and
-> `default_popup` icon references from `manifest.json` if the browser complains.
-
-### 3. Register the native host
+### 2. Register the native host (dev convenience scripts)
 
 ```powershell
-cd e:\reverse\downloader\extension\host
-.\register-host.ps1 -ExtensionId <PASTE_THE_ID_HERE>
+# Firefox (add-on id is fixed: fastget@fastget.addon)
+.\extension\host\register-host-firefox.ps1
+
+# Chrome / Edge (needs the id the browser assigns to your unpacked load)
+.\extension\host\register-host.ps1 -ExtensionId <PASTE_THE_ID>
 ```
 
-This writes a concrete `com.fastget.host.json` (with the real path to
-`fastget-host.exe` and your extension ID) and registers it for Chrome and Edge
-under `HKCU` (no admin needed).
+These write the host manifest with the real path to `fastget-host.exe` and the
+registry keys under `HKCU`. The packaged installer does the same thing without
+scripts; these are only for development.
 
-### 4. Restart the browser and test
+### 3. Load the extension
 
-Restart Chrome/Edge, then click a download link for a reasonably large file. The
-extension cancels the browser's own download, fastget takes over, and the file
-lands in your **Downloads** folder. A notification reports completion.
+- **Chrome/Edge:** `chrome://extensions` → Developer mode → **Load unpacked** →
+  select `extension` (or `build\dist\extension`). Copy the extension ID and use
+  it in step 2.
+- **Firefox:** `about:debugging#/runtime/this-firefox` → **Load Temporary
+  Add-on** → select `extension/manifest.json`. (Temporary add-ons reset on
+  restart; a permanent install must be signed — see `FIREFOX-SETUP.md`.)
 
-Use the toolbar popup to toggle catching, set the number of connections, or only
-catch files above a size threshold.
+### 4. Test
 
-## Uninstall
+Click a download link. The confirm popup appears; choose a folder and start. The
+file lands where you chose, with a live progress window and a row in the
+download list.
 
-```powershell
-cd e:\reverse\downloader\extension\host
-.\register-host.ps1 -Unregister
-```
+## Files
 
-Then remove the unpacked extension from `chrome://extensions`.
-
-## Firefox
-
-Firefox is supported too. It differs from Chrome/Edge in two ways, both handled
-by a separate script:
-
-- the host manifest uses `allowed_extensions` (the add-on's gecko ID) instead of
-  `allowed_origins`, and
-- it registers under `HKCU\Software\Mozilla\NativeMessagingHosts\com.fastget.host`.
-
-The add-on ID is fixed in `manifest.json`
-(`browser_specific_settings.gecko.id` = `fastget@fastget.local`), so there's no
-ID to copy the way there is for Chrome.
-
-### Install on Firefox (Windows)
-
-1. Build the binaries (same as Chrome, see above).
-2. Register the host:
-   ```powershell
-   cd e:\reverse\downloader\extension\host
-   .\register-host-firefox.ps1
-   ```
-   This writes `com.fastget.host.firefox.json` (kept separate from the Chrome
-   manifest so both browsers can be registered at once) and the Firefox registry
-   key.
-3. Load the extension: open `about:debugging#/runtime/this-firefox`, click
-   **Load Temporary Add-on**, and select `extension/manifest.json`. (Temporary
-   add-ons are removed when Firefox restarts; for a permanent install the add-on
-   must be signed, which is a separate step.)
-4. Start a download to test.
-
-Uninstall: `.\register-host-firefox.ps1 -Unregister`.
+| File                    | Purpose                                             |
+|-------------------------|-----------------------------------------------------|
+| `manifest.json`         | MV3 manifest; gecko id `fastget@fastget.addon`      |
+| `background.js`         | catches downloads, talks to the host                |
+| `popup.html/.js`        | toolbar popup: open list, settings, setup prompt    |
+| `dialog.html/.js`       | the "download this file?" confirm popup             |
+| `setup.html/.js`        | one-page setup / app-detection guide                |
+| `privacy.html`          | privacy policy (for the store listing)              |
+| `AMO-LISTING.md`        | addons.mozilla.org submission text + justifications |
+| `host/`                 | dev-only host registration scripts (not shipped)    |
 
 ## Troubleshooting
 
-- **"fastget host not reachable" notification** — the native host isn't
-  registered, or the extension ID in the manifest doesn't match. Re-run
-  `register-host.ps1` with the current ID and restart the browser.
-- **Download happens in the browser anyway** — catching may be disabled in the
-  popup, the file may be below the size threshold, or it's a non-http(s) URL
-  (e.g. blob:), which is intentionally left to the browser.
-- **Nothing is saved** — check that `fastget-host.exe` exists at the path written
-  into `com.fastget.host.json`.
+- **"fastget app isn't installed" setup page opens** — install the app, or
+  (dev) re-run the register-host script and restart the browser.
+- **Download happens in the browser anyway** — catching may be off in the popup,
+  the file may be under the size threshold, or it's a non-http(s) URL (blob:),
+  which is intentionally left to the browser. Also, when the app is missing the
+  extension deliberately hands the download back to the browser so nothing is
+  lost.
+- **A logged-in download fails (403)** — grant cookie access from the setup page
+  or the toolbar popup.

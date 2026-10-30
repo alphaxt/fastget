@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yourname/fastget/internal/fsutil"
+	"github.com/alphaxt/fastget/internal/fsutil"
 )
 
 // stallTimeout is how long one connection may go without receiving any data

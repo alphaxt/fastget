@@ -21,9 +21,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yourname/fastget/internal/fsutil"
-	"github.com/yourname/fastget/internal/picker"
-	"github.com/yourname/fastget/internal/queue"
+	"github.com/alphaxt/fastget/internal/fsutil"
+	"github.com/alphaxt/fastget/internal/picker"
+	"github.com/alphaxt/fastget/internal/queue"
 )
 
 //go:embed static/*

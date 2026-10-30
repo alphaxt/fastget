@@ -17,7 +17,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/yourname/fastget/internal/engine"
+	"github.com/alphaxt/fastget/internal/engine"
 )
 
 func main() {

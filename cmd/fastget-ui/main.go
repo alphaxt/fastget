@@ -24,9 +24,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/yourname/fastget/internal/queue"
-	"github.com/yourname/fastget/internal/tray"
-	"github.com/yourname/fastget/internal/ui"
+	"github.com/alphaxt/fastget/internal/queue"
+	"github.com/alphaxt/fastget/internal/tray"
+	"github.com/alphaxt/fastget/internal/ui"
 )
 
 func main() {

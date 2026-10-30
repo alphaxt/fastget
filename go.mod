@@ -1,3 +1,3 @@
-module github.com/yourname/fastget
+module github.com/alphaxt/fastget
 
 go 1.22

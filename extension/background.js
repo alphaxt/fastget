@@ -47,11 +47,7 @@ function askHost(payload) {
     });
     port.onDisconnect.addListener(() => {
       if (!answered) {
-        const err = chrome.runtime.lastError && chrome.runtime.lastError.message;
-        resolve({
-          type: "error",
-          message: "fastget native host is not reachable. Run extension\\host\\register-host-firefox.ps1 (or register-host.ps1 for Chrome/Edge). " + (err || ""),
-        });
+        resolve({ type: "error", notInstalled: true, message: "The fastget app isn't installed or isn't running." });
       }
     });
     port.postMessage(payload);
@@ -167,15 +163,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.cmd === "openList") {
     askHost({ type: "open-ui" }).then((reply) => {
       if (reply.type === "ui") chrome.tabs.create({ url: reply.listUrl });
+      else if (reply.notInstalled) chrome.tabs.create({ url: chrome.runtime.getURL("setup.html") });
       else notify("fastget", reply.message || "could not open the download list");
       sendResponse(reply);
     });
     return true; // async response
   }
+  if (msg.cmd === "checkApp") {
+    askHost({ type: "ping" }).then((r) => sendResponse({ ok: r.type === "pong" }));
+    return true;
+  }
   return false;
 });
 
 // startDownload queues the download in fastget and opens its progress window.
+// If the app is not installed, it hands the file back to the browser so the
+// download is never lost.
 async function startDownload(info) {
   const reply = await askHost({
     type: "download",
@@ -199,13 +202,41 @@ async function startDownload(info) {
       width: 540,
       height: 440,
     });
+  } else if (reply.notInstalled) {
+    // App missing: let the browser download it so nothing is lost, then guide
+    // the user to set fastget up.
+    bypass.add(info.url);
+    chrome.downloads.download({ url: info.url, filename: info.filename || undefined });
+    showSetupNeeded();
   } else {
     notify("Download failed", reply.message || "unknown error");
   }
 }
 
+// showSetupNeeded opens the one-page setup guide, at most once a minute, so a
+// user without the app gets help instead of a cryptic error on every click.
+let lastSetupShown = 0;
+function showSetupNeeded() {
+  const now = Date.now();
+  if (now - lastSetupShown < 60000) {
+    notify("fastget app required", "Open the extension and click Set up fastget.");
+    return;
+  }
+  lastSetupShown = now;
+  chrome.tabs.create({ url: chrome.runtime.getURL("setup.html") });
+}
+
+// gatherCookies returns the Cookie header for url, but only if the user has
+// granted the optional "cookies" + host permission (needed for logged-in /
+// members-only downloads). Without it we send no cookies, which is fine for
+// public files and keeps the default install low-permission.
 async function gatherCookies(url) {
   try {
+    const granted = await chrome.permissions.contains({
+      permissions: ["cookies"],
+      origins: ["<all_urls>"],
+    });
+    if (!granted) return "";
     const cookies = await chrome.cookies.getAll({ url });
     return cookies.map((c) => `${c.name}=${c.value}`).join("; ");
   } catch {

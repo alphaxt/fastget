@@ -1,135 +1,117 @@
 # fastget
 
-A clean-room, multi-connection download engine written in Go. It provides the
-capabilities that make download accelerators feel fast, built entirely from
-standard, public HTTP techniques:
+A fast, clean-room download manager for Windows: a multi-connection download
+engine, a desktop download list, and a browser extension that catches downloads
+and hands them to the app.
 
-- **Multi-connection downloading** — a file is split into N byte-range segments
-  fetched in parallel via the HTTP `Range` header.
-- **Pause / resume** — per-segment progress is persisted to a sidecar `.fgdl`
-  file, so an interrupted download continues instead of restarting.
-- **Retry with backoff** — a transient failure on one segment is retried without
-  failing the whole download.
-- **Live speed reporting** — aggregate throughput across all connections.
-- **Graceful fallback** — servers that don't support ranges get a correct
-  single-stream download.
+Repository: https://github.com/alphaxt/fastget
 
-This is an independent implementation. It is not derived from, and does not copy,
-any proprietary download manager. These are the standard mechanisms parallel
-HTTP downloading is built on.
+It is built entirely from standard, public HTTP techniques and does not copy any
+proprietary download manager.
 
-## Requirements
+## Features
 
-- Go 1.22+ (install from https://go.dev/dl/)
+- **Multi-connection downloading** — each file is split into byte-range pieces
+  fetched in parallel (HTTP `Range`) and joined back together.
+- **Pause / resume** — per-file progress is persisted to a `.fgdl` sidecar, so an
+  interrupted download continues instead of restarting.
+- **Per-server connection sharing** — several downloads from one server share a
+  fair pool of connections instead of flooding it.
+- **Speed limit** — a single cap on the combined speed of all downloads, change
+  it live.
+- **Scheduling** — start a download at a set time, or only download within an
+  allowed time-of-day window.
+- **Integrity check** — optional size + SHA-256 verification after a download.
+- **Choose where to save** — pick any folder/drive, with a free-space check.
+- **Browser catch** — Chrome, Edge and Firefox, with an IDM-style confirm popup
+  and a live progress window (speed, time left, pause/resume/cancel).
+- **System tray + start on login.**
+- **Retry with backoff and a stall watchdog** for flaky connections.
 
-## Build
+## Install (for users)
+
+Download the Windows installer from the
+[latest release](https://github.com/alphaxt/fastget/releases/latest) and run it.
+It installs the app and connects the browser extension automatically — no command
+line. Then add the extension from the browser store (or load it for development,
+see below).
+
+## Components
+
+| Binary            | What it is                                              |
+|-------------------|---------------------------------------------------------|
+| `fastget.exe`     | command-line downloader                                 |
+| `fastget-ui.exe`  | desktop app: download list + per-download progress UI   |
+| `fastget-host.exe`| native-messaging host the browser extension talks to    |
+
+## Build from source
+
+Requires Go 1.22+ (https://go.dev/dl/).
 
 ```powershell
-cd e:\reverse\downloader
-go build -o fastget.exe ./cmd/fastget
+# all three binaries + the browser extension package + the AMO zip:
+.\build\build.ps1
+# or, if `go` isn't on PATH:
+.\build\build.ps1 -Go "C:\Program Files\Go\bin\go.exe"
 ```
 
-## Run
+See `build/README.md` for packaging into an installer, and `extension/README.md`
+for loading the extension during development.
+
+## Command-line usage
 
 ```powershell
 # 16 connections, explicit output name
 .\fastget.exe -c 16 -o ubuntu.iso https://example.com/big/ubuntu.iso
 
-# default 8 connections, filename derived from the URL
+# default 8 connections, name taken from the URL
 .\fastget.exe https://example.com/big/file.zip
 ```
 
-Press Ctrl+C to interrupt. Re-run the exact same command to resume where it
-stopped (the engine validates the remote file via ETag/Last-Modified before
-resuming, and restarts cleanly if the remote file changed).
-
-## Flags
-
 | Flag        | Default | Meaning                                         |
 |-------------|---------|-------------------------------------------------|
-| `-c`        | 8       | Number of parallel connections (segments)       |
-| `-o`        | (auto)  | Output file path; derived from the URL if unset |
-| `-retries`  | 5       | Per-segment retry attempts on transient errors  |
-| `-timeout`  | 30s     | Per-request timeout (`0` disables it)           |
+| `-c`        | 8       | Parallel connections                            |
+| `-o`        | (auto)  | Output path; derived from the URL if unset      |
+| `-limit`    | (none)  | Max speed, e.g. `500k`, `2m`                     |
+| `-sha256`   | (none)  | Expected SHA-256; fails if the result differs   |
+| `-size`     | 0       | Expected size in bytes                           |
+| `-retries`  | 5       | Per-piece retry attempts                        |
 | `-ua`       | (auto)  | Custom `User-Agent` header                      |
 
-## Desktop app (download list UI)
+Press Ctrl+C to interrupt; re-run the same command to resume.
 
-A local web UI over the engine and queue — the "download list" experience, with
-live progress, pause/resume/remove, and a parallel-downloads setting.
-
-```powershell
-go build -o fastget-ui.exe ./cmd/fastget-ui
-.\fastget-ui.exe
-```
-
-It binds to `127.0.0.1:7799` and opens your browser. Flags:
-
-| Flag         | Default            | Meaning                                  |
-|--------------|--------------------|------------------------------------------|
-| `-addr`      | `127.0.0.1:7799`   | Address to bind (keep it on loopback)    |
-| `-parallel`  | 3                  | How many downloads run at once           |
-| `-state`     | user config dir    | Where the queue list is persisted        |
-| `-no-open`   | false              | Don't auto-open the browser              |
-
-The queue persists across restarts; anything running when you quit is paused and
-resumable next launch.
-
-Scheduling: give a download a start time with the "start at" field, or set an
-allowed time-of-day window (e.g. only download 00:00–06:00). Outside the window,
-running downloads pause and resume automatically when it reopens.
-
-### Run in the background (system tray)
+## Desktop app
 
 ```powershell
-.\fastget-ui.exe --tray
+.\fastget-ui.exe            # opens the download list in your browser
+.\fastget-ui.exe --tray     # runs in the system tray (used for start-on-login)
 ```
 
-In `--tray` mode the app runs quietly with a Windows notification-area icon
-(right-click for **Open fastget** / **Quit**) instead of opening a browser on
-start. This is what the auto-start entry uses. The tray is pure Go (Win32 via the
-standard library, no cgo); on non-Windows platforms `--tray` just runs headless.
-
-### Start on login
-
-```powershell
-# enable (points at the installed fastget-ui.exe by default)
-.\build\autostart.ps1 -Enable
-.\build\autostart.ps1 -Status
-.\build\autostart.ps1 -Disable
-```
-
-The installer can also set this up for you (see `build/README.md`).
-
-## Browser integration
-
-Catch downloads directly from Chrome/Edge and hand them to the engine. See
-`extension/README.md` for install steps (load the unpacked `extension` folder,
-then run `extension/host/register-host.ps1`).
-
-## Install / package
-
-See `build/README.md`: `build.ps1` compiles all three binaries, and either
-`install.ps1` (no dependencies) or `fastget.iss` (Inno Setup) packages them.
+It serves a local UI on `127.0.0.1:7799`. The queue persists across restarts.
+Start-on-login can be toggled with `.\build\autostart.ps1 -Enable` / `-Disable`,
+or during install.
 
 ## Project layout
 
 ```
 downloader/
   cmd/
-    fastget/        CLI entrypoint + progress bar
+    fastget/        CLI
     fastget-host/   native-messaging host for the browser extension
-    fastget-ui/     local web UI (download list)
+    fastget-ui/     desktop app: HTTP server + system tray
   internal/
-    engine/         the engine: probe, plan, parallel fetch, stitch, resume
-    queue/          job list + scheduler (concurrency limit, pause/resume, persist)
-    ui/             HTTP server + embedded static UI
-  extension/        the WebExtension + native-host registration
+    engine/         download engine: probe, plan, parallel fetch, stitch, resume,
+                    rate limit, per-server connection sharing, verify
+    queue/          job list + scheduler (concurrency, pause/resume, schedule, persist)
+    ui/             HTTP server + embedded download list and progress pages
+    fsutil/         file names, free space, disk-full detection
+    picker/         native "choose folder" dialog
+    tray/           Windows system-tray icon (pure Go)
+  extension/        the WebExtension (+ dev-only host registration scripts)
+  build/            build + packaging scripts and the Inno Setup installer
   tools/makeicons/  generates the extension icons
 ```
 
-## Roadmap (remaining ideas)
+## License
 
-- **Speed limiter** — token-bucket rate control.
-- **Integrity checks** — verify size and optional hashes after stitching.
-- **Firefox host registration** — script the Firefox-specific manifest/registry.
+See `LICENSE`.

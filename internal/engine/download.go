@@ -16,7 +16,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/yourname/fastget/internal/fsutil"
+	"github.com/alphaxt/fastget/internal/fsutil"
 )
 
 // Downloader runs a single multi-connection download.

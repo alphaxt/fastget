@@ -52,11 +52,30 @@ finally {
     Pop-Location
 }
 
-# Bundle the browser extension alongside the binaries.
+# Bundle the browser extension alongside the binaries, but only the files the
+# browser actually loads. The host/ folder (PowerShell scripts, manifests) and
+# the docs are NOT part of the WebExtension — the installer writes the host
+# manifests itself, so users never run a script.
 $extSrc = Join-Path $root "extension"
 $extDst = Join-Path $dist "extension"
-Copy-Item -Recurse $extSrc $extDst
+New-Item -ItemType Directory -Path $extDst | Out-Null
+$webFiles = @(
+    "manifest.json", "background.js",
+    "popup.html", "popup.js",
+    "dialog.html", "dialog.js",
+    "setup.html", "setup.js",
+    "privacy.html"
+)
+foreach ($f in $webFiles) { Copy-Item (Join-Path $extSrc $f) $extDst }
+Copy-Item -Recurse (Join-Path $extSrc "icons") (Join-Path $extDst "icons")
+
+# Also produce the exact zip to upload to addons.mozilla.org for signing.
+$zip = Join-Path $scriptDir "fastget-extension.zip"
+if (Test-Path $zip) { Remove-Item $zip }
+Compress-Archive -Path (Join-Path $extDst "*") -DestinationPath $zip
 
 Write-Host ""
-Write-Host "done. dist contents:"
+Write-Host "done."
+Write-Host "dist (for the installer):"
 Get-ChildItem $dist | Select-Object Name, Length | Format-Table -AutoSize
+Write-Host "AMO upload package: $zip"

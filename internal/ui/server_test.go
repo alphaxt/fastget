@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yourname/fastget/internal/queue"
+	"github.com/alphaxt/fastget/internal/queue"
 )
 
 func newTestServer(t *testing.T) http.Handler {

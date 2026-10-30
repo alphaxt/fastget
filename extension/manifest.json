@@ -1,20 +1,22 @@
 {
   "manifest_version": 3,
   "name": "fastget Download Catcher",
-  "version": "0.4.0",
-  "description": "Catches downloads in the browser and hands them to the fastget engine for fast multi-connection downloading.",
+  "version": "0.5.0",
+  "description": "Send browser downloads to the fastget app for fast multi-connection downloading, pause/resume, and a download list. Requires the free fastget app for Windows.",
+  "homepage_url": "https://github.com/alphaxt/fastget",
   "permissions": [
     "downloads",
     "nativeMessaging",
     "storage",
-    "notifications",
+    "notifications"
+  ],
+  "optional_permissions": [
     "cookies"
   ],
-  "host_permissions": [
+  "optional_host_permissions": [
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js",
     "scripts": ["background.js"]
   },
   "action": {
