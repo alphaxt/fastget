@@ -1,9 +1,0 @@
-﻿{
-  "name": "com.fastget.host",
-  "description": "fastget native messaging host",
-  "path": "E:\\reverse\\downloader\\fastget-host.exe",
-  "type": "stdio",
-  "allowed_extensions": [
-    "fastget@fastget.addon"
-  ]
-}
