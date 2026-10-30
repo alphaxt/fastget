@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        width: 240px;
+        padding: 12px;
+        margin: 0;
+      }
+      h1 {
+        font-size: 14px;
+        margin: 0 0 10px;
+      }
+      label {
+        display: block;
+        font-size: 13px;
+        margin: 8px 0 2px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 6px 0;
+      }
+      input[type="number"] {
+        width: 70px;
+      }
+      button.big {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 0;
+        border-radius: 6px;
+        background: #1f6feb;
+        color: #fff;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .perm {
+        font-size: 12px;
+        background: #fff4e5;
+        border: 1px solid #f0c27b;
+        border-radius: 6px;
+        padding: 8px;
+        margin-bottom: 10px;
+      }
+      .perm button.big { margin: 8px 0 0; }
+      button.warn { background: #d97706; }
+      [hidden] { display: none !important; }
+      .hint {
+        font-size: 11px;
+        color: #666;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>fastget</h1>
+
+    <button id="openList" class="big">Open download list</button>
+
+    <div id="permBox" class="perm" hidden>
+      fastget needs access to websites to send their cookies, otherwise some
+      downloads fail with "403".
+      <button id="grant" class="big warn">Allow access to websites</button>
+    </div>
+
+    <div class="row">
+      <span>Catch downloads</span>
+      <input type="checkbox" id="enabled" />
+    </div>
+
+    <div class="row">
+      <span>Ask before each download</span>
+      <input type="checkbox" id="ask" />
+    </div>
+
+    <div class="row">
+      <span>Open a progress window per download</span>
+      <input type="checkbox" id="showProgress" />
+    </div>
+
+    <label for="connections">Connections</label>
+    <input type="number" id="connections" min="1" max="32" />
+
+    <label for="minSize">Only catch files larger than (MB)</label>
+    <input type="number" id="minSize" min="0" step="1" />
+
+    <p class="hint">
+      Caught downloads are handed to the local fastget engine for fast
+      multi-connection downloading and saved to your Downloads folder.
+    </p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

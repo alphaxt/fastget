@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>fastget — download file</title>
+    <style>
+      :root {
+        --bg: #1b1f27;
+        --text: #e6e8ee;
+        --muted: #9aa3b2;
+        --accent: #1f6feb;
+        --border: #313847;
+        --warn: #f0b14a;
+        --err: #ff8f87;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font: 13px/1.4 system-ui, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 16px 18px;
+      }
+      h1 { font-size: 15px; margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+      h1 .dot { color: var(--accent); }
+      .row { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+      .k { width: 70px; color: var(--muted); flex: none; }
+      .v { flex: 1; min-width: 0; word-break: break-all; max-height: 40px; overflow: auto; }
+      input[type="text"] {
+        flex: 1;
+        min-width: 0;
+        font: inherit;
+        color: var(--text);
+        background: #10141b;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 6px 8px;
+      }
+      .sub { margin: -2px 0 6px 78px; font-size: 12px; color: var(--muted); min-height: 16px; }
+      .sub.warn { color: var(--warn); }
+      .sub.err { color: var(--err); }
+      .opts { display: flex; gap: 18px; align-items: center; margin: 10px 0 0 78px; color: var(--muted); }
+      .opts input[type="number"] {
+        width: 56px; font: inherit; color: var(--text);
+        background: #10141b; border: 1px solid var(--border); border-radius: 5px; padding: 3px 6px;
+      }
+      .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+      button {
+        font: inherit;
+        padding: 7px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: #10141b;
+        color: var(--text);
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      button.primary { background: var(--accent); border-color: var(--accent); }
+      button:hover { filter: brightness(1.12); }
+      button:disabled { opacity: .55; cursor: default; }
+    </style>
+  </head>
+  <body>
+    <h1><span class="dot">●</span> fastget — download this file?</h1>
+
+    <div class="row"><div class="k">Address</div><div class="v" id="url">—</div></div>
+    <div class="row"><div class="k">Size</div><div class="v" id="size">—</div></div>
+
+    <div class="row">
+      <div class="k">File name</div>
+      <input id="file" type="text" spellcheck="false" />
+    </div>
+
+    <div class="row">
+      <div class="k">Save to</div>
+      <input id="folder" type="text" spellcheck="false" placeholder="Loading…" />
+      <button id="browse" type="button">Browse…</button>
+    </div>
+    <div id="free" class="sub"></div>
+
+    <div class="opts">
+      <label><input type="checkbox" id="remember" /> Always save here</label>
+      <label>Connections <input type="number" id="connections" min="1" max="32" value="8" /></label>
+    </div>
+
+    <div class="actions">
+      <button id="browser" type="button">Use browser</button>
+      <button id="cancel" type="button">Cancel</button>
+      <button id="download" type="button" class="primary">Download with fastget</button>
+    </div>
+
+    <script src="dialog.js"></script>
+  </body>
+</html>

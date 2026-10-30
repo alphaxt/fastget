@@ -1,0 +1,5 @@
+b.log
+file
+build/*.zip
+extension/host/com.fastget.host.json
+extension/host/com.fastget.host.firefox.json

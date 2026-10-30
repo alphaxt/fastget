@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>fastget</title>
+    <link rel="stylesheet" href="/static/progress.css" />
+  </head>
+  <body>
+    <div class="card">
+      <div class="head">
+        <div class="icon">⬇</div>
+        <div class="title">
+          <div id="name" class="name">Loading…</div>
+          <div id="url" class="url"></div>
+        </div>
+      </div>
+
+      <div class="bar"><span id="bar"></span></div>
+      <div class="pct-line">
+        <span id="pct">0%</span>
+        <span id="state" class="state">connecting</span>
+      </div>
+
+      <table class="facts">
+        <tr><td>Status</td><td id="status">—</td></tr>
+        <tr><td>File size</td><td id="size">—</td></tr>
+        <tr><td>Downloaded</td><td id="done">—</td></tr>
+        <tr><td>Transfer rate</td><td id="speed">—</td></tr>
+        <tr><td>Time left</td><td id="eta">—</td></tr>
+        <tr><td>Connections</td><td id="conns">—</td></tr>
+        <tr><td>Save to</td><td id="path" class="path">—</td></tr>
+      </table>
+
+      <div id="error" class="error" hidden></div>
+
+      <div class="actions" id="runningActions">
+        <button id="list" class="ghost">Download list</button>
+        <span class="spacer"></span>
+        <button id="changeFolder" hidden>Change folder…</button>
+        <button id="pause">Pause</button>
+        <button id="resume" hidden>Resume</button>
+        <button id="cancel" class="danger">Cancel</button>
+      </div>
+
+      <div class="actions" id="doneActions" hidden>
+        <button id="list2" class="ghost">Download list</button>
+        <span class="spacer"></span>
+        <button id="openFolder">Open folder</button>
+        <button id="open" class="primary">Open</button>
+        <button id="close">Close</button>
+      </div>
+    </div>
+
+    <script src="/static/progress.js"></script>
+  </body>
+</html>

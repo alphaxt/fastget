@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>fastget</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>fastget <span id="totalSpeed" class="total"></span></h1>
+      <div class="config">
+        <label>
+          Parallel downloads
+          <input type="number" id="maxConcurrent" min="1" max="16" value="3" />
+        </label>
+        <label>
+          Speed limit
+          <input type="text" id="speedLimit" placeholder="e.g. 2m" title="max total speed, e.g. 500k, 2m; empty = unlimited" />
+        </label>
+      </div>
+    </header>
+
+    <form id="addForm" class="add-row">
+      <input
+        type="url"
+        id="url"
+        placeholder="Paste a download URL (https://...)"
+        required
+      />
+      <input type="number" id="connections" min="1" max="32" value="8" title="connections" />
+      <input type="datetime-local" id="startAt" title="optional: start at this time" />
+      <button type="submit">Add</button>
+    </form>
+
+    <div class="window-row">
+      <label>
+        <input type="checkbox" id="windowEnabled" />
+        Only download between
+      </label>
+      <input type="time" id="windowStart" value="00:00" />
+      <span>and</span>
+      <input type="time" id="windowEnd" value="06:00" />
+      <button id="windowSave" class="secondary" type="button">Apply schedule</button>
+    </div>
+
+    <div class="window-row">
+      <span>Save downloads to</span>
+      <strong id="saveFolder" class="folder-path">…</strong>
+      <span id="saveFree"></span>
+      <button id="folderChange" class="secondary" type="button">Change…</button>
+      <button id="folderReset" class="secondary" type="button" title="use the Downloads folder">Reset</button>
+    </div>
+
+    <div id="message" class="message" hidden></div>
+
+    <main>
+      <table id="jobs">
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Size</th>
+            <th class="progress-col">Progress</th>
+            <th>Speed</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="jobsBody">
+          <!-- rows injected by app.js -->
+        </tbody>
+      </table>
+      <p id="empty" class="empty">No downloads yet. Add a URL above.</p>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

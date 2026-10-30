@@ -1,0 +1,9 @@
+{
+  "name": "com.fastget.host",
+  "description": "fastget native messaging host",
+  "path": "REPLACE_WITH_ABSOLUTE_PATH_TO\\fastget-host.exe",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://REPLACE_WITH_YOUR_EXTENSION_ID/"
+  ]
+}

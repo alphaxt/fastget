@@ -1,0 +1,14 @@
+# Compiled binaries
+*.exe
+
+# Build output
+build/dist/
+build/Output/
+
+# Download engine sidecar/state files
+*.fgdl
+queue.json
+
+# OS cruft
+Thumbs.db
+.DS_Store
