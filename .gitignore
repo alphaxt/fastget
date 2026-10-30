@@ -17,6 +17,9 @@ b.log
 # (com.fastget.host.json stays tracked: it is the placeholder template.)
 extension/host/com.fastget.host.firefox.json
 
+# Store assets (AMO/Chrome screenshots and icons — not source code)
+build/store-assets/
+
 # OS cruft
 Thumbs.db
 .DS_Store

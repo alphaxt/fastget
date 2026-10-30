@@ -70,9 +70,27 @@ foreach ($f in $webFiles) { Copy-Item (Join-Path $extSrc $f) $extDst }
 Copy-Item -Recurse (Join-Path $extSrc "icons") (Join-Path $extDst "icons")
 
 # Also produce the exact zip to upload to addons.mozilla.org for signing.
+# NOTE: We use ZipArchive directly (not Compress-Archive) so that entry names
+# use forward-slash separators (icons/icon48.png) instead of Windows backslashes.
+# AMO's validator rejects backslash paths in the archive.
 $zip = Join-Path $scriptDir "fastget-extension.zip"
 if (Test-Path $zip) { Remove-Item $zip }
-Compress-Archive -Path (Join-Path $extDst "*") -DestinationPath $zip
+
+Add-Type -AssemblyName System.IO.Compression
+$zipStream = [System.IO.File]::Open($zip, [System.IO.FileMode]::Create)
+$zipArchive = [System.IO.Compression.ZipArchive]::new($zipStream, [System.IO.Compression.ZipArchiveMode]::Create)
+$allExtFiles = Get-ChildItem -Recurse -File $extDst
+foreach ($file in $allExtFiles) {
+    # Build a forward-slash entry name relative to $extDst
+    $entryName = $file.FullName.Substring($extDst.Length + 1).Replace("\", "/")
+    $entry = $zipArchive.CreateEntry($entryName, [System.IO.Compression.CompressionLevel]::Optimal)
+    $entryStream = $entry.Open()
+    $bytes = [System.IO.File]::ReadAllBytes($file.FullName)
+    $entryStream.Write($bytes, 0, $bytes.Length)
+    $entryStream.Dispose()
+}
+$zipArchive.Dispose()
+$zipStream.Dispose()
 
 Write-Host ""
 Write-Host "done."
