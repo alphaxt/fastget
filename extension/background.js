@@ -70,12 +70,23 @@ chrome.downloads.onCreated.addListener(async (item) => {
     return; // already finished or not cancellable: leave it to the browser
   }
 
+  // item.referrer is often "" when the download was triggered by a direct link
+  // click (Firefox omits it). Fall back to the active tab's URL so CDNs that
+  // check Referer don't reject the request with 403.
+  let referrer = item.referrer || "";
+  if (!referrer) {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab && tab.url && /^https?:/i.test(tab.url)) referrer = tab.url;
+    } catch { /* tabs permission not granted; leave referrer empty */ }
+  }
+
   const info = {
     id: Math.random().toString(36).slice(2, 10),
     url,
     filename: guessName(item),
     size: item.fileSize > 0 ? item.fileSize : (item.totalBytes > 0 ? item.totalBytes : 0),
-    referrer: item.referrer || "",
+    referrer,
     cookie: await gatherCookies(url),
     userAgent: navigator.userAgent,
     connections: settings.connections,
