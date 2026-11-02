@@ -11,7 +11,7 @@
 ; login.
 
 #define AppName "fastget"
-#define AppVersion "0.5.0"
+#define AppVersion "0.5.1"
 #define AppPublisher "fastget"
 #define AppExeName "fastget-ui.exe"
 #define HostName "com.fastget.host"
@@ -23,9 +23,10 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
 PrivilegesRequired=lowest
-DefaultDirName={userappdata}\{#AppName}
+DefaultDirName={localappdata}\{#AppName}
 DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
+CloseApplications=force
 OutputDir=Output
 OutputBaseFilename=fastget-setup
 Compression=lzma2
@@ -74,7 +75,7 @@ Filename: "{app}\{#AppExeName}"; Description: "Launch fastget"; Flags: nowait po
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\host"
-Type: filesandordirs; Name: "{userappdata}\fastget"
+Type: filesandordirs; Name: "{localappdata}\fastget"
 
 [Code]
 // JSONEscapePath doubles the backslashes in a Windows path for embedding in JSON.

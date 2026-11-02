@@ -67,6 +67,8 @@ func New(opts Options) *Downloader {
 }
 
 // applyHeaders sets the default and caller-supplied headers on a request.
+// We send all headers a real browser sends; Cloudflare and other CDN guards
+// return 403 for bare Go requests that are missing Accept-Language and similar.
 func (d *Downloader) applyHeaders(req *http.Request) {
 	req.Header.Set("User-Agent", d.opts.UserAgent)
 	if d.opts.Referer != "" {
@@ -77,6 +79,13 @@ func (d *Downloader) applyHeaders(req *http.Request) {
 	}
 	// Accept anything; some servers 403 requests without an Accept header.
 	req.Header.Set("Accept", "*/*")
+	// Standard headers a real browser always sends. Their absence is a
+	// reliable bot signal used by Cloudflare, Akamai, and most CDN guards.
+	req.Header.Set("Accept-Language", "en-US,en;q=0.9")
+	req.Header.Set("Accept-Encoding", "gzip, deflate, br")
+	req.Header.Set("Cache-Control", "no-cache")
+	req.Header.Set("Pragma", "no-cache")
+	req.Header.Set("Connection", "keep-alive")
 	for k, v := range d.opts.Headers {
 		req.Header.Set(k, v)
 	}
